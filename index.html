@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Management System (CMS)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Style for the simulated message box */
+        #messageBox {
+            z-index: 1000;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
+
+    <div id="messageBox" class="fixed top-4 left-1/2 -translate-x-1/2 p-4 rounded-lg shadow-xl bg-blue-600 text-white transition duration-300 hidden">
+        <p id="messageText" class="font-semibold"></p>
+    </div>
+
+    <section id="login-view" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-bold text-center text-indigo-600 dark:text-indigo-400">CMS Login</h2>
+            <p class="text-center text-gray-600 dark:text-gray-400">Sign in to access your course dashboard.</p>
+            <form class="space-y-4" onsubmit="loginUser(event)">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address (Simulated)</label>
+                    <input type="email" id="login-email" class="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500" required placeholder="user@university.edu">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password (Simulated)</label>
+                    <input type="password" id="login-password" class="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500" required placeholder="********">
+                </div>
+                <div>
+                    <label for="login-role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Login As</label>
+                    <select id="login-role" class="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <option value="Student">Student</option>
+                        <option value="Faculty">Faculty</option>
+                        <option value="Admin">Admin Staff</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
+                    Sign In
+                </button>
+            </form>
+            <p class="text-center text-xs text-gray-500 dark:text-gray-400">Note: This is a simulated login. Any credentials will work.</p>
+        </div>
+    </section>
+
+    <div id="app" class="flex flex-col lg:flex-row min-h-screen hidden">
+        <div class="lg:w-64 w-full bg-white dark:bg-gray-800 shadow-xl border-b lg:border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col space-y-4">
+            <h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-6">CMS Dashboard</h1>
+            
+            <div class="space-y-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <label for="role-select" class="text-sm font-semibold text-gray-600 dark:text-gray-300 block">Select Role:</label>
+                <select id="role-select" onchange="switchRole(this.value)" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <option value="Student">Student</option>
+                    <option value="Faculty">Faculty</option>
+                    <option value="Admin">Admin Staff</option>
+                </select>
+                <p id="user-id-display" class="text-xs text-gray-500 dark:text-gray-400 break-all pt-1">User ID: Loading...</p>
+            </div>
+
+            <nav class="flex flex-col space-y-2">
+                <button onclick="setView('dashboard')" class="nav-button active">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 00-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Dashboard
+                </button>
+                <button onclick="setView('materials')" class="nav-button">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0l-1-2m7 5V5m0 0l1 2m7 5l-1-2"></path></svg>
+                    Course Materials
+                </button>
+                <button onclick="setView('assignments')" class="nav-button">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Assignments
+                </button>
+                <button onclick="setView('gradebook')" class="nav-button">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-10 12h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    Grade Book
+                </button>
+                <button id="admin-nav-item" onclick="setView('admin')" class="nav-button hidden">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.228.006 2.573-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Admin: Course Proposals
+                </button>
+            </nav>
+            
+            <div id="loading-indicator" class="mt-auto p-2 text-sm text-center text-indigo-500 font-semibold hidden">
+                Connecting to Database...
+            </div>
+        </div>
+
+        <main class="flex-grow p-4 md:p-8 lg:p-12 overflow-y-auto">
+            <header class="mb-8">
+                <h2 id="main-title" class="text-3xl font-extrabold text-gray-900 dark:text-white">CMS Dashboard</h2>
+                <p id="main-subtitle" class="text-lg text-gray-600 dark:text-gray-400 mt-1">Welcome to the Course Management System.</p>
+                <div id="announcement-area" class="mt-4 p-3 bg-yellow-100 dark:bg-yellow-800 border-l-4 border-yellow-500 rounded-r-lg text-sm">
+                    <p class="font-semibold text-yellow-800 dark:text-yellow-200">System Announcement: Firebase initializing...</p>
+                </div>
+            </header>
+
+            <div id="views-container">
+                <section id="dashboard-view" class="view">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition">
+                            <h3 class="text-xl font-semibold text-indigo-600 dark:text-indigo-400">Current Role</h3>
+                            <p id="current-role" class="text-4xl font-extrabold mt-2">Student</p>
+                        </div>
+                        <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition">
+                            <h3 class="text-xl font-semibold text-green-600 dark:text-green-400">Total Assignments</h3>
+                            <p id="total-assignments" class="text-4xl font-extrabold mt-2">0</p>
+                        </div>
+                        <div class="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition">
+                            <h3 class="text-xl font-semibold text-red-600 dark:text-red-400">Pending Grades</h3>
+                            <p id="pending-grades" class="text-4xl font-extrabold mt-2">0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="materials-view" class="view hidden">
+                    <h3 class="text-2xl font-bold mb-4">Course Materials: CMS 101</h3>
+                    <div id="materials-list" class="space-y-4">
+                        <p class="text-center text-gray-500">Loading course materials...</p>
+                    </div>
+                </section>
+
+                <section id="assignments-view" class="view hidden">
+                    <h3 class="text-2xl font-bold mb-4">Assignments List</h3>
+                    <div id="assignments-list" class="space-y-4">
+                        <p class="text-center text-gray-500">Loading assignments...</p>
+                    </div>
+                </section>
+
+                <section id="gradebook-view" class="view hidden">
+                    <h3 class="text-2xl font-bold mb-4">Grade Book: CMS 101</h3>
+                    <div id="grades-list" class="overflow-x-auto bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assignment</th>
+                                    <th id="grade-col-header" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Score</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Max Points</th>
+                                    <th id="feedback-col-header" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grades-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr><td colspan="4" class="p-4 text-center text-gray-500">Awaiting grade data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <section id="admin-view" class="view hidden">
+                    <h3 class="text-2xl font-bold mb-4">Administrative Console: Course Proposals</h3>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                        <h4 class="text-xl font-semibold mb-3">Submit New Course Proposal</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            Use this tool to create new course proposals and track their progress through the Academic Senate approval pipeline.
+                        </p>
+                        <form onsubmit="submitProposal(event)">
+                            <div class="mb-4">
+                                <label for="proposal-title" class="block text-sm font-medium mb-1">Course Title</label>
+                                <input type="text" id="proposal-title" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Advanced CMS Architecture" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="proposal-description" class="block text-sm font-medium mb-1">Course Description</label>
+                                <textarea id="proposal-description" rows="3" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500" required></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md hover:shadow-lg">
+                                Submit Proposal
+                            </button>
+                        </form>
+
+                        <div id="proposal-status" class="mt-8">
+                            <h4 class="text-xl font-semibold mb-3">Active Proposals (Simulated Tracking)</h4>
+                            <div class="space-y-3" id="proposals-list">
+                                <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-md border-l-4 border-blue-500">
+                                    <p class="font-semibold">CMS 201: Proposal Draft</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Status: Department Review</p>
+                                </div>
+                                <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-md border-l-4 border-green-500">
+                                    <p class="font-semibold">AI in Education</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Status: Approved by Senate</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Set Firestore log level to debug for development
+        setLogLevel('debug');
+
+        // Global variables provided by the environment - MODIFIED FOR LOCAL EXECUTION
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-cms-app';
+        const DUMMY_FIREBASE_CONFIG = {
+            apiKey: "DUMMY_API_KEY",
+            authDomain: "dummy-project.firebaseapp.com",
+            projectId: "dummy-project-id",
+            storageBucket: "dummy-project-id.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdefg1234567890"
+        };
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(DUMMY_FIREBASE_CONFIG));
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+        let currentUserId = null;
+        let currentUserRole = 'Student'; // Default role
+
+        // Helper function for UI message
+        window.showMessage = (text, duration = 3000) => {
+            const box = document.getElementById('messageBox');
+            const textElement = document.getElementById('messageText');
+            textElement.textContent = text;
+            box.classList.remove('hidden');
+
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, duration);
+        }
+
+        // --- Core CMS Data Structure and Paths ---
+        const COURSE_ID = 'CMS101-Intro';
+        const PUBLIC_COURSE_DOC_PATH = `/artifacts/${appId}/public/data/courses/${COURSE_ID}`;
+        const USER_PROFILE_COLLECTION = (userId) => `/artifacts/${appId}/users/${userId}/profile`;
+
+        // --- Firebase Initialization and Authentication ---
+
+        const initFirebase = async () => {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) {
+                    throw new Error("Firebase config is missing or empty. Using DUMMY_FIREBASE_CONFIG.");
+                }
+                
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Authentication and data loading are now handled after successful simulated login.
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                showMessage('CMS Failed to Initialize Firebase: ' + error.message, 8000);
+            }
+        }
+        
+        // --- Login Logic ---
+
+        window.loginUser = (event) => {
+            event.preventDefault();
+            // In a real application, Firebase signInWithEmailAndPassword would be called here.
+            // For this simulation, we take the role and proceed.
+            const role = document.getElementById('login-role').value;
+            
+            showMessage(`Simulated Login Successful as ${role}. Loading Dashboard...`, 2000);
+            showCMSDashboard(role);
+        };
+
+        const showCMSDashboard = (role) => {
+            // 1. Switch Views
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('loading-indicator').classList.remove('hidden');
+
+            // 2. Set Role and Sign In Anonymously (for getting a UID for Firestore pathing)
+            currentUserRole = role;
+            
+            // This is a substitute for a successful real sign-in which provides a UID
+            signInAnonymously(auth).then(async (userCredential) => {
+                const user = userCredential.user;
+                currentUserId = user.uid;
+                document.getElementById('user-id-display').textContent = 'User ID: ' + currentUserId;
+                
+                // Update UI elements and save the selected role
+                document.getElementById('role-select').value = role;
+                await saveUserRole(role); 
+                updateRoleView(role);
+                
+                // 3. Initialize and Load Data
+                initializeCourseData();
+                setupRealtimeListeners();
+                
+                document.getElementById('loading-indicator').classList.add('hidden');
+                setView('dashboard'); // Go to the main dashboard
+                
+            }).catch((error) => {
+                console.error("Anonymous sign-in for persistence failed:", error);
+                showMessage('Authentication error. Cannot connect to database.', 5000);
+                document.getElementById('loading-indicator').classList.add('hidden');
+            });
+        };
+
+        /**
+         * Initializes baseline course data if the public document is empty.
+         */
+        const initializeCourseData = async () => {
+            if (!db) return;
+            const courseRef = doc(db, PUBLIC_COURSE_DOC_PATH);
+            const courseSnap = await getDoc(courseRef);
+
+            if (!courseSnap.exists() || !courseSnap.data().materials) {
+                const initialData = {
+                    name: 'CMS 101: Introduction to Course Management Systems',
+                    faculty: 'Dr. Evelyn Reed',
+                    materials: [
+                        { id: 'mat1', title: 'Course Syllabus (2025)', type: 'Syllabus', link: '#', date: new Date().toISOString() },
+                        { id: 'mat2', title: 'Lecture Slides: Week 1', type: 'Handout', link: '#', date: new Date(Date.now() - 86400000).toISOString() }
+                    ],
+                    assignments: [
+                        { id: 'A1', title: 'Project Proposal', maxPoints: 100, due: '2025-12-01', description: 'Outline your final project scope.' },
+                        { id: 'A2', title: 'Final Report', maxPoints: 200, due: '2025-12-15', description: 'Submit the full project report.' }
+                    ],
+                    grades: [
+                        // Example Grade for a simulated Student/Faculty to view
+                        { assignmentId: 'A1', userId: 'SIMULATED_STUDENT_ID', score: 92, feedback: 'Great start! Focus on the architecture diagrams for the next draft.' }
+                    ]
+                };
+                try {
+                    await setDoc(courseRef, initialData);
+                    showMessage('Initial CMS data created successfully.');
+                } catch (e) {
+                    console.error("Error setting initial document: ", e);
+                    showMessage('Error initializing data: ' + e.message, 5000);
+                }
+            }
+        };
+
+        /**
+         * Sets up the real-time listener for the public course data.
+         */
+        const setupRealtimeListeners = () => {
+            if (!db) return;
+            const courseRef = doc(db, PUBLIC_COURSE_DOC_PATH);
+
+            onSnapshot(courseRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    renderCourseContent(data);
+                } else {
+                    showMessage("Course document does not exist. Initializing...", 5000);
+                    initializeCourseData();
+                }
+            }, (error) => {
+                console.error("Error listening to course data:", error);
+                showMessage('Error fetching real-time course data: ' + error.message, 5000);
+            });
+        };
+
+        /**
+         * Loads the user's saved role from their private profile.
+         * (Kept for switchRole, even if the initial load is bypassed by login)
+         */
+        const loadUserRole = async (userId) => {
+            if (!db || !userId) return;
+            const roleRef = doc(db, USER_PROFILE_COLLECTION(userId), 'data');
+            
+            try {
+                const docSnap = await getDoc(roleRef);
+                if (docSnap.exists()) {
+                    currentUserRole = docSnap.data().role || currentUserRole;
+                }
+                document.getElementById('role-select').value = currentUserRole;
+                updateRoleView(currentUserRole);
+                showMessage(`Role retrieved: ${currentUserRole}`, 2000);
+            } catch (e) {
+                console.error("Error loading user role:", e);
+                // Fail silently, use current role
+            }
+        };
+
+        /**
+         * Saves the user's selected role to their private profile.
+         */
+        const saveUserRole = async (role) => {
+            if (!db || !currentUserId) {
+                // If not logged in yet, skip saving the role
+                return;
+            }
+            const roleRef = doc(db, USER_PROFILE_COLLECTION(currentUserId), 'data');
+            try {
+                await setDoc(roleRef, { role: role });
+            } catch (e) {
+                console.error("Error saving user role:", e);
+                showMessage('Error saving role: ' + e.message, 5000);
+            }
+        };
+
+        // Global functions for the window (accessible from HTML event handlers)
+        window.switchRole = (newRole) => {
+            currentUserRole = newRole;
+            saveUserRole(newRole); // Save to Firestore
+            updateRoleView(newRole);
+            // Re-render the current view to apply role-specific logic
+            const currentView = document.querySelector('.view:not(.hidden)').id.replace('-view', '');
+            setView(currentView);
+        };
+
+        window.setView = (viewName) => {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            // Show the requested view
+            const targetView = document.getElementById(`${viewName}-view`);
+            if (targetView) {
+                targetView.classList.remove('hidden');
+                document.getElementById('main-title').textContent = `${viewName.charAt(0).toUpperCase() + viewName.slice(1)} View`;
+            }
+
+            // Update navigation button active state
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('bg-indigo-100', 'dark:bg-gray-700', 'active'));
+            document.querySelector(`[onclick="setView('${viewName}')"]`)?.classList.add('bg-indigo-100', 'dark:bg-gray-700', 'active');
+            
+            // Render content specific to the view and role
+            if (viewName === 'gradebook') {
+                renderGradebook();
+            } else if (viewName === 'assignments') {
+                renderAssignments();
+            }
+        };
+
+        /**
+         * Updates UI elements based on the current user role.
+         */
+        const updateRoleView = (role) => {
+            document.getElementById('current-role').textContent = role;
+            document.getElementById('admin-nav-item').classList.toggle('hidden', role !== 'Admin');
+            
+            const subtitleMap = {
+                Student: 'View your course materials, assignments, and grades.',
+                Faculty: 'Manage course content, assignments, and submit grades.',
+                Admin: 'Manage university-wide course proposals and systems integration.'
+            };
+            document.getElementById('main-subtitle').textContent = subtitleMap[role] || subtitleMap.Student;
+        };
+
+        /**
+         * Main function to render all content based on real-time course data.
+         */
+        const renderCourseContent = (data) => {
+            if (!data) return;
+
+            // --- 1. Dashboard Metrics ---
+            document.getElementById('total-assignments').textContent = data.assignments?.length || 0;
+            // Simplified metric: Assume 1 pending grade for Student view if grades exist
+            document.getElementById('pending-grades').textContent = currentUserRole === 'Student' && data.grades?.length > 0 ? 1 : 0;
+            document.getElementById('announcement-area').innerHTML = `
+                <p class="font-semibold text-yellow-800 dark:text-yellow-200">
+                    Course Name: ${data.name} | Faculty: ${data.faculty}
+                </p>
+                <p class="text-xs mt-1">Chat tool and integrated email are simulated to be available.</p>
+            `;
+
+            // --- 2. Materials View ---
+            const materialsList = document.getElementById('materials-list');
+            materialsList.innerHTML = '';
+            if (data.materials && data.materials.length > 0) {
+                data.materials.forEach(m => {
+                    const materialDate = new Date(m.date).toLocaleDateString();
+                    materialsList.innerHTML += `
+                        <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 ${m.type === 'Syllabus' ? 'border-indigo-500' : 'border-green-500'}">
+                            <div>
+                                <p class="text-lg font-semibold">${m.title} <span class="text-sm font-normal text-gray-500">(${m.type})</span></p>
+                                <p class="text-xs text-gray-400 mt-1">Posted: ${materialDate}</p>
+                            </div>
+                            <a href="${m.link}" target="_blank" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 transition font-medium">Download &rarr;</a>
+                        </div>
+                    `;
+                });
+            } else {
+                materialsList.innerHTML = '<p class="text-center text-gray-500 p-4">No materials posted yet.</p>';
+            }
+            
+            // Re-render current view if it's one of the data-dependent views
+            const currentView = document.querySelector('.view:not(.hidden)').id.replace('-view', '');
+            if (['assignments', 'gradebook'].includes(currentView)) {
+                window.setView(currentView);
+            }
+        };
+
+        /**
+         * Renders the Assignments View based on the current role.
+         */
+        const renderAssignments = () => {
+            const courseRef = doc(db, PUBLIC_COURSE_DOC_PATH);
+            getDoc(courseRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const assignments = data.assignments || [];
+                    const assignmentsList = document.getElementById('assignments-list');
+                    assignmentsList.innerHTML = '';
+                    
+                    if (!data.assignments || data.assignments.length === 0) {
+                        assignmentsList.innerHTML = '<p class="text-center text-gray-500 p-4">No active assignments.</p>';
+                        return;
+                    }
+
+                    data.assignments.forEach(a => {
+                        const isFaculty = currentUserRole === 'Faculty';
+                        const actionButton = isFaculty 
+                            ? `<button onclick="submitGrade('${a.id}')" class="text-sm bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-full transition">Grade Submissions</button>`
+                            : `<button onclick="submitAssignment('${a.id}')" class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-1 px-3 rounded-full transition">Submit Work</button>`;
+
+                        assignmentsList.innerHTML += `
+                            <div class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center">
+                                <div>
+                                    <p class="text-xl font-bold text-gray-900 dark:text-white">${a.title}</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${a.description}</p>
+                                    <div class="mt-2 text-sm space-y-1">
+                                        <p class="text-red-500 font-semibold">Due: ${a.due}</p>
+                                        <p class="text-gray-600 dark:text-gray-300">Max Points: ${a.maxPoints}</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 md:mt-0">
+                                    ${actionButton}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+        };
+
+        /**
+         * Renders the Grade Book View based on the current role.
+         */
+        const renderGradebook = () => {
+            const courseRef = doc(db, PUBLIC_COURSE_DOC_PATH);
+            getDoc(courseRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const assignments = data.assignments || [];
+                    const grades = data.grades || [];
+                    const isFaculty = currentUserRole === 'Faculty';
+                    const tableBody = document.getElementById('grades-table-body');
+                    tableBody.innerHTML = '';
+
+                    // Update headers for Faculty/Student view
+                    document.getElementById('grade-col-header').textContent = isFaculty ? 'Student ID' : 'Score';
+                    document.getElementById('feedback-col-header').textContent = isFaculty ? 'Score' : 'Feedback';
+                    
+                    if (isFaculty) {
+                        // Faculty View: Display all grades (simulated: grouped by assignment)
+                        assignments.forEach(a => {
+                            const assignmentGrades = grades.filter(g => g.assignmentId === a.id);
+                            if (assignmentGrades.length === 0) {
+                                tableBody.innerHTML += `
+                                    <tr class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                                        <td class="px-6 py-4 font-medium">${a.title}</td>
+                                        <td colspan="3" class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">No submissions graded yet.</td>
+                                    </tr>
+                                `;
+                            } else {
+                                assignmentGrades.forEach(g => {
+                                    tableBody.innerHTML += `
+                                        <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                            <td class="px-6 py-4 font-medium">${a.title}</td>
+                                            <td class="px-6 py-4 text-sm text-indigo-600 font-mono">${g.userId.substring(0, 10)}...</td>
+                                            <td class="px-6 py-4 font-semibold text-green-600">${g.score} / ${a.maxPoints}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">${g.feedback || 'N/A'}</td>
+                                        </tr>
+                                    `;
+                                });
+                            }
+                        });
+                    } else {
+                        // Student View: Display grades only for the current user (SIMULATED_STUDENT_ID)
+                        if (grades.length === 0) {
+                            tableBody.innerHTML += `<tr><td colspan="4" class="p-4 text-center text-gray-500">You have no recorded grades.</td></tr>`;
+                            return;
+                        }
+                        
+                        assignments.forEach(a => {
+                            const grade = grades.find(g => g.assignmentId === a.id && g.userId === 'SIMULATED_STUDENT_ID');
+                            const scoreText = grade ? `${grade.score} / ${a.maxPoints}` : 'Pending';
+                            const scoreClass = grade ? (grade.score / a.maxPoints > 0.8 ? 'text-green-600 font-bold' : 'text-orange-500') : 'text-gray-400 italic';
+                            
+                            tableBody.innerHTML += `
+                                <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                    <td class="px-6 py-4 font-medium">${a.title}</td>
+                                    <td class="px-6 py-4 text-sm ${scoreClass}">${scoreText}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">${a.maxPoints}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">${grade?.feedback || 'Awaiting grade/feedback'}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+            });
+        };
+
+        // --- Simulated Actions ---
+
+        window.submitAssignment = (assignmentId) => {
+            showMessage(`Assignment ${assignmentId} submitted successfully (simulated). Faculty will now grade it.`);
+        };
+
+        window.submitGrade = (assignmentId) => {
+            if (currentUserRole !== 'Faculty') {
+                showMessage('Access Denied. Only Faculty can grade submissions.', 3000);
+                return;
+            }
+            
+            // This simulates updating the grades array in the course document
+            const newScore = Math.floor(Math.random() * 50) + 50; // Score between 50 and 100
+            const feedback = newScore > 90 ? "Outstanding submission and analysis." : "Good effort. Review citation style for next time.";
+
+            const courseRef = doc(db, PUBLIC_COURSE_DOC_PATH);
+            getDoc(courseRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    let grades = data.grades || [];
+                    
+                    const existingIndex = grades.findIndex(g => g.assignmentId === assignmentId && g.userId === 'SIMULATED_STUDENT_ID');
+                    
+                    const newGradeEntry = {
+                        assignmentId: assignmentId,
+                        userId: 'SIMULATED_STUDENT_ID',
+                        score: newScore,
+                        feedback: feedback
+                    };
+
+                    if (existingIndex > -1) {
+                        grades[existingIndex] = newGradeEntry;
+                    } else {
+                        grades.push(newGradeEntry);
+                    }
+                    
+                    updateDoc(courseRef, { grades: grades }).then(() => {
+                        showMessage(`Grade of ${newScore} submitted for assignment ${assignmentId} (for simulated student). Real-time update will follow.`);
+                    }).catch(e => {
+                        console.error("Error updating grade:", e);
+                        showMessage('Error updating grade: ' + e.message, 5000);
+                    });
+                }
+            });
+        };
+
+        window.submitProposal = (event) => {
+            event.preventDefault();
+            if (currentUserRole !== 'Admin') {
+                showMessage('Access Denied. Only Admin Staff can submit proposals.', 3000);
+                return;
+            }
+            const title = document.getElementById('proposal-title').value;
+            const description = document.getElementById('proposal-description').value;
+            
+            // Administrative action is simulated to keep core data clean
+            console.log("New Course Proposal Submitted:", { title, description });
+            
+            document.getElementById('proposal-title').value = '';
+            document.getElementById('proposal-description').value = '';
+
+            // Simulate adding a new proposal to the list
+            const proposalsList = document.getElementById('proposals-list');
+            proposalsList.innerHTML += `
+                <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-md border-l-4 border-orange-500 animate-pulse">
+                    <p class="font-semibold">${title}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Status: Pending Registrar Review</p>
+                </div>
+            `;
+
+            showMessage(`Proposal "${title}" submitted. Tracking initiated.`, 4000);
+        };
+
+        // --- Bootstrap ---
+        window.onload = () => {
+            initFirebase();
+            // Initially show the login page
+            document.getElementById('app').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+        };
+    </script>
+
+</body>
+</html>
