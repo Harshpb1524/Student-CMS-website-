@@ -52,9 +52,6 @@ Teachers can view and check student submissions.
 
 ## 📄 Project Documentation
 
-👉 [Click here to view the project report (PDF)](Student_CMS_Project.pdf)
-
-
 🎯 Purpose of the Project
 
 Understand basic web development concepts
